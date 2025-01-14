@@ -4,11 +4,10 @@ plugins {
 }
 
 android {
-    namespace = "com.example.morsowalatarka"
+    namespace = "com.jedyny_cywilizowany.morseowa_latarka"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.morsowalatarka"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

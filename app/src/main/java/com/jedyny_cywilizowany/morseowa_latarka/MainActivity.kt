@@ -1,4 +1,4 @@
-package com.example.morsowalatarka
+package com.jedyny_cywilizowany.morseowa_latarka
 
 import android.content.Context
 import android.hardware.camera2.CameraAccessException
@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
     private var cameraManager: CameraManager? = null
     private var cameraId = ""
     private val startCode = abToCode("babab")
-    private val stopCode = abToCode("ababa")
+    private val stopCode =  abToCode("ababa")
     private val extraCommands = arrayOf(
         abToCode("aaabbbaaa"),
         abToCode("aabbaa"),
@@ -177,12 +177,12 @@ class MainActivity : AppCompatActivity() {
     private fun parseString(str:String): Array<Boolean>
     {
         var c = List<Boolean>(0){false}
-        for (ch in str) {
+        for (ch in " "+str+" ") {
             val cc = coding[ch - Char.MIN_VALUE]
             c = c + cc
             if (cc.isNotEmpty()) c = c + Array<Boolean>(3){false}
         }
-        return c.toTypedArray()
+        return startCode + c.toTypedArray() + stopCode
     }
     private fun abToCode(str: String): Array<Boolean>
     {

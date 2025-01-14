@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MorsowaLatarka"
+rootProject.name = "Morse'owa Latarka"
 include(":app")
