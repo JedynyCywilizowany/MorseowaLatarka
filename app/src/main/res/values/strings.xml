@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name" translatable="false">Morse\'owa Latarka</string>
+    <string-array name="extra_codes">
+        <item>SOS</item>
+        <item>Prośba o powtórzenie</item>
+        <item>Zrozumiano</item>
+        <item>Początek kontaktu</item>
+        <item>Koniec kontaktu</item>
+        <item>Wezwanie</item>
+        <item>Czekaj</item>
+    </string-array>
+</resources>
