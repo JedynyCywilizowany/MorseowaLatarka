@@ -5,14 +5,20 @@ import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemSelectedListener
 import android.widget.Button
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +35,24 @@ class MainActivity : AppCompatActivity() {
         activateButton=findViewById(R.id.button)
         cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
         cameraId = cameraManager!!.cameraIdList[0]
+
+        val spinner=findViewById<Spinner>(R.id.spinner)
+        spinner.onItemSelectedListener = object : OnItemSelectedListener {
+            override fun onItemSelected(
+                parentView: AdapterView<*>?,
+                selectedItemView: View?,
+                position: Int,
+                id: Long
+            ){
+                if ((running?.isActive)!=true) {
+                    spinnerLastIndex = position
+                    if (position>0) send(extraCommands[position])
+                }
+                else spinner.setSelection(spinnerLastIndex)
+            }
+            override fun onNothingSelected(parentView: AdapterView<*>?) {
+            }
+        }
 
         fun codeChar(lc:Char,uc:Char?,str:String)
         {
@@ -123,20 +147,24 @@ class MainActivity : AppCompatActivity() {
     private val startCode = abToCode("babab")
     private val stopCode =  abToCode("ababa")
     private val extraCommands = arrayOf(
+        Array(0){false},
         abToCode("aaabbbaaa"),
         abToCode("aabbaa"),
         abToCode("aaaba"),
         abToCode("aaabaaabaaab"),
         abToCode("aaabab"),
         abToCode("bab"),
-        abToCode("abaaa")
+        abToCode("abaaa"),
+        abToCode("abaab")
         )
+    private var spinnerLastIndex: Int = 0
     fun buttonPress(v:View)
     {
         if ((running?.isActive)==true)
         {
             running?.cancel()
             activateButton!!.text="OK"
+            findViewById<Spinner>(R.id.spinner).setSelection(0)
             cameraManager?.setTorchMode(cameraId, false)
         }
         else {
@@ -154,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                 cameraManager?.setTorchMode(cameraId, false)
                 delay(500)
                 var lastSign=false
-                for (sign in startCode + code + stopCode) {
+                for (sign in code) {
                     if (sign!=lastSign) {
                         cameraManager?.setTorchMode(cameraId, sign)
                         lastSign = sign
@@ -172,6 +200,7 @@ class MainActivity : AppCompatActivity() {
                 builder.create().show()
             }
             activateButton!!.text="OK"
+            findViewById<Spinner>(R.id.spinner).setSelection(0)
         }
     }
     private fun parseString(str:String): Array<Boolean>
