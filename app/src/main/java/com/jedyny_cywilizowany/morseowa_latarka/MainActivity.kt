@@ -20,24 +20,29 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+class MainActivity : AppCompatActivity()
+{
+    override fun onCreate(savedInstanceState: Bundle?)
+    {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)){ v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        txtInput=findViewById(R.id.textInput)
-        activateButton=findViewById(R.id.button)
+        //Przypisuje elementy interfejsu do zmiennych
+        txtInput = findViewById(R.id.textInput)
+        activateButton = findViewById(R.id.button)
         cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
         cameraId = cameraManager!!.cameraIdList[0]
 
+        //Ustawia żeby po wybraniu dodatkowej komendy z listy, wysłało ją
         val spinner=findViewById<Spinner>(R.id.spinner)
-        spinner.onItemSelectedListener = object : OnItemSelectedListener {
+        spinner.onItemSelectedListener = object : OnItemSelectedListener
+        {
             override fun onItemSelected(
                 parentView: AdapterView<*>?,
                 selectedItemView: View?,
@@ -50,17 +55,20 @@ class MainActivity : AppCompatActivity() {
                 }
                 else spinner.setSelection(spinnerLastIndex)
             }
-            override fun onNothingSelected(parentView: AdapterView<*>?) {
-            }
+            override fun onNothingSelected(parentView: AdapterView<*>?) {}
         }
 
+        //Przypisuje znakom kodowanie morse'owe
+        //a = kropka
+        //b = kreska
         fun codeChar(lc:Char,uc:Char?,str:String)
         {
             val c = abToCode(str)
             coding[lc - Char.MIN_VALUE] = c
             if (uc!=null) coding[uc - Char.MIN_VALUE] = c
         }
-        fun codeChar(lc:Char,str:String) {
+        fun codeChar(lc:Char,str:String)
+        {
             codeChar(lc, null, str)
         }
         codeChar('a','A',"ab")
@@ -127,8 +135,10 @@ class MainActivity : AppCompatActivity() {
         coding[' ' - Char.MIN_VALUE] = Array(4){false}
     }
 
-    override fun onDestroy() {
+    override fun onDestroy()
+    {
         super.onDestroy()
+        //Wyłącza latarkę przy zamknięciu aplikacji
         try
         {
             cameraManager?.setTorchMode(cameraId, false)
@@ -137,16 +147,15 @@ class MainActivity : AppCompatActivity() {
         {
         }
     }
-
-    private val coding = Array<Array<Boolean>>(Char.MAX_VALUE-Char.MIN_VALUE){Array(0){false}}
-    private var running: Job? = null
+    private val coding = Array<Array<Boolean>>(Char.MAX_VALUE-Char.MIN_VALUE){Array(0){false}} //Tablica przechowująca zakodowane znaki
+    private var running: Job? = null //Chwilowo wysyłany komunikat
     private var txtInput: TextView? = null
     private var activateButton: Button? = null
     private var cameraManager: CameraManager? = null
     private var cameraId = ""
-    private val startCode = abToCode("babab")
-    private val stopCode =  abToCode("ababa")
-    private val extraCommands = arrayOf(
+    private val startCode = abToCode("babab") //Kod rozpoczęcia komunikatu
+    private val stopCode =  abToCode("ababa") //Kod zakończenia komunikatu
+    private val extraCommands = arrayOf( //Dodatkowe komendy, do wyboru z listy w interfejsie
         Array(0){false},
         abToCode("aaabbbaaa"),
         abToCode("aabbaa"),
@@ -156,43 +165,53 @@ class MainActivity : AppCompatActivity() {
         abToCode("bab"),
         abToCode("abaaa"),
         abToCode("abaab")
-        )
+    )
     private var spinnerLastIndex: Int = 0
+    //Wciśnięcie przycisku "OK" / "STOP"
     fun buttonPress(v:View)
     {
-        if ((running?.isActive)==true)
+        if ((running?.isActive)==true) //Jeśli już coś jest wysyłane, zatrzymaj to
         {
             running?.cancel()
             activateButton!!.text="OK"
             findViewById<Spinner>(R.id.spinner).setSelection(0)
             cameraManager?.setTorchMode(cameraId, false)
         }
-        else {
+        else //Jeśli nie, wyślij komunikat
+        {
             val text = txtInput!!.text
             send(parseString(text.toString()))
         }
     }
+    //Wysyłanie komunikatu
     private fun send(code:Array<Boolean>)
     {
         activateButton!!.text="STOP"
+        //Komunikaty są wysyłane asynchronicznie, żeby nie blokowały interfejsu i dało się je zatrzymać
         val context = this
-        running = MainScope().launch {
+        running = MainScope().launch{
             try
             {
                 cameraManager?.setTorchMode(cameraId, false)
                 delay(500)
                 var lastSign=false
-                for (sign in code) {
-                    if (sign!=lastSign) {
+                //Przechodzi przez tablicę z kodem w cyklach po 0,2s
+                //Jeśli natknie się na true, włączy latarkę, jeśli false, wyłączy ją
+                for (sign in code)
+                {
+                    if (sign!=lastSign)
+                    {
                         cameraManager?.setTorchMode(cameraId, sign)
                         lastSign = sign
                     }
                     delay(200)
                 }
+                //Na koniec wyłącza
                 cameraManager?.setTorchMode(cameraId, false)
             }
-            catch (e: CameraAccessException)
+            catch (e: Exception)
             {
+                //Jeśli nie ma latarki lub nie ma zgody na jej użycie, pokazuje błąd
                 val builder = AlertDialog.Builder(context)
                 builder.setTitle("Błąd")
                 builder.setMessage(e.localizedMessage)
@@ -203,20 +222,26 @@ class MainActivity : AppCompatActivity() {
             findViewById<Spinner>(R.id.spinner).setSelection(0)
         }
     }
+    //Zamienia tekst na tablicę booleanów gotowych do wyświetlenia
     private fun parseString(str:String): Array<Boolean>
     {
         var c = List<Boolean>(0){false}
-        for (ch in " "+str+" ") {
+        for (ch in " "+str+" ")
+        {
             val cc = coding[ch - Char.MIN_VALUE]
             c = c + cc
             if (cc.isNotEmpty()) c = c + Array<Boolean>(3){false}
         }
         return startCode + c.toTypedArray() + stopCode
     }
+    //Zamienia a/b na tablicę booleanów,
+    //wskazujących czy w danym cyklu latarka powinna być włączona czy nie, uwzględnia przerwy
+    //Komunikaty operują w cyklach o długości kropki
     private fun abToCode(str: String): Array<Boolean>
     {
         var c = List<Boolean>(0){false}
-        for (ch in str) {
+        for (ch in str)
+        {
             if (ch=='a') c = c + true
             else if (ch=='b') c = c + Array<Boolean>(3){true}
             c = c + false
